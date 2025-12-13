@@ -1,9 +1,11 @@
+/* ==================== Reset ==================== */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/* ==================== Color Variables ==================== */
 :root {
   --bg: #fafafa;
   --fg: #111;
@@ -23,6 +25,7 @@
   }
 }
 
+/* ==================== Base Styles ==================== */
 body {
   font: 15px/1.5 -apple-system, system-ui, sans-serif;
   background: var(--bg);
@@ -30,6 +33,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* ==================== Header ==================== */
 header {
   max-width: 1200px;
   margin: 0 auto;
@@ -47,6 +51,7 @@ header h1 {
   color: var(--mid);
 }
 
+/* ==================== Breadcrumb Path ==================== */
 .path {
   max-width: 1200px;
   margin: 0 auto;
@@ -70,6 +75,7 @@ header h1 {
   color: var(--line);
 }
 
+/* ==================== Upload Section ==================== */
 .upload {
   max-width: 1200px;
   margin: 0 auto;
@@ -96,6 +102,7 @@ input[type="file"] {
   display: none;
 }
 
+/* ==================== Progress Bar ==================== */
 .progress {
   display: none;
   margin-top: 1rem;
@@ -144,6 +151,7 @@ input[type="file"] {
   color: var(--mid);
 }
 
+/* ==================== Main Grid ==================== */
 main {
   max-width: 1200px;
   margin: 0 auto;
@@ -153,6 +161,7 @@ main {
   gap: 0.75rem;
 }
 
+/* ==================== File/Folder Cards ==================== */
 .card {
   background: var(--bg);
   border: 1px solid var(--line);
@@ -174,18 +183,6 @@ main {
   opacity: 0.6;
 }
 
-.card > i {
-  font-size: 1.75rem;
-  color: var(--mid);
-  margin-bottom: 0.625rem;
-  margin-top: auto;
-}
-
-.folder > i {
-  color: var(--primary);
-  margin-top: 0;
-}
-
 .name {
   font-size: 0.8125rem;
   font-weight: 500;
@@ -202,6 +199,39 @@ main {
   margin-bottom: 0.625rem;
 }
 
+/* ==================== SVG Icons ==================== */
+svg {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.card > svg {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 0.625rem;
+  margin-top: auto;
+  color: var(--mid);
+  flex-shrink: 0;
+}
+
+.folder > svg {
+  color: var(--primary);
+  margin-top: 0;
+}
+
+.upload label svg,
+.path a svg {
+  vertical-align: text-bottom;
+}
+
+.empty svg {
+  display: block;
+  margin: 0 auto 1rem;
+  opacity: 0.5;
+  color: var(--mid);
+}
+
+/* ==================== Action Buttons ==================== */
 .actions {
   display: flex;
   gap: 0.375rem;
@@ -223,11 +253,18 @@ main {
   text-decoration: none;
 }
 
+.actions a svg,
+.actions button svg {
+  display: block;
+  margin: 0 auto;
+}
+
 .actions a:active,
 .actions button:active {
   opacity: 0.6;
 }
 
+/* ==================== Empty State ==================== */
 .empty {
   grid-column: 1 / -1;
   padding: 4rem 1rem;
@@ -235,12 +272,7 @@ main {
   color: var(--mid);
 }
 
-.empty i {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  opacity: 0.5;
-}
-
+/* ==================== Pagination ==================== */
 .pages {
   max-width: 1200px;
   margin: 0 auto;
