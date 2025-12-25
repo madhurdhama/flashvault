@@ -1,35 +1,34 @@
-# 🧩 Flask Home Server
+# ⚡ FlashVault
 
-A **lightweight local file server** built with Flask for Linux. Browse, upload, download, and delete files — all from your web browser. Works entirely **offline** on your **local Wi-Fi**, perfect for quick file sharing between your **PC and phone**.
+**Fast. Local. Simple.**
+
+FlashVault is a lightweight, high-speed local file server built with Flask for fast and simple file sharing over your local network.
+It allows you to browse, upload, download, and manage files over your local network — no internet required.
+
+Perfect for quickly transferring files between your PC, phone, or other devices on the same Wi-Fi.
 
 ---
 
 ## 🚀 Features
 
-- 📂 **Browse files & folders** with breadcrumb navigation
-- ⬆️ **Upload multiple files** with real-time progress tracking
-- ⬇️ **Download files** directly to your device
-- 🗑️ **Delete files** with confirmation dialog
-- 💾 **Storage quota enforcement** - prevents uploads when full
-- 📊 **Live upload progress** with time remaining estimates
-- 🎨 **Modern dark/light theme** (auto-detects system preference)
-- ⚡ **Works locally** — no internet required
-- 📱 **Mobile-friendly** responsive design
+- ⚡ High-speed local file transfers (LAN optimized)
+- 📁 Browse folders and files from any browser
+- ⬆️ Upload large files with progress tracking
+- ⬇️ Download files instantly
+- 🧭 Clean and responsive web interface
+- 🧩 Minimal dependencies, easy to run
 
 ---
 
 ## 🛠️ Setup
 
-### 1. Clone this repo
+### 1. Clone the repository
 ```bash
-git clone https://github.com/madhurdhama/flask-home-server.git
-cd flask-home-server
+git clone https://github.com/madhurdhama/flashvault.git
 ```
 
 ### 2. Install dependencies
 ```bash
-python3 -m venv ~/ve_flask
-source ~/ve_flask/bin/activate
 pip install flask
 ```
 
@@ -38,63 +37,50 @@ pip install flask
 python3 app.py
 ```
 
-### 4. Access from any device on your network
-
-Open in your browser: `http://<your-ip>:8000`
-
-**Example:** `http://192.168.0.10:8000`
-
-**To find your IP address:**
-```bash
-ip a | grep 'inet '
-```
-
 ---
 
-## ▶️ Quick Start (subsequent runs)
-```bash
-source ~/ve_flask/bin/activate
-python3 app.py
+## 🌐 Access the Server
+
+Find your local IP address and open it in your browser:
+
+```
+http://<your-ip>:8000
 ```
 
 ---
 
 ## 📁 Directory Structure
+
 ```
 ~/FileShare/          # All shared files (auto-created)
-~/.tmp/               # Temporary upload staging (auto-created)
-flask-home-server/
+~/.tmp/               # Temporary upload storage
+flashvault/
 ├── app.py            # Main Flask application
 ├── config.py         # Configuration settings
 ├── utils.py          # Helper functions
 ├── static/
 │   ├── css/
-│   │   ├── style.css      # Main stylesheet
-│   │   └── all.min.css    # Font Awesome icons
+│   │   └── style.css
 │   └── js/
-│       └── app.js         # Frontend JavaScript
+│       └── app.js
 └── templates/
-    └── index.html         # File browser interface
+    └── index.html
 ```
 
 ---
 
-## 🧑‍💻 Tech Stack
+## 🧰 Tech Stack
 
-- **Backend:** Flask + Python 3
-- **Frontend:** Vanilla JavaScript
-- **Styling:** CSS3 with CSS variables for theming
-- **Icons:** Font Awesome 6
-- **Platform:** Linux (tested on Arch)
-- **Storage:** Local filesystem with quota management
-- **Server:** Werkzeug development server (HTTP/1.1)
+- Python 3 (Flask)
+- HTML, CSS, JavaScript
+- Local filesystem storage
+- HTTP-based file transfer
 
 ---
 
 ## ⚠️ Security Notice
 
 - Designed for **local network use only**
-- **No authentication** — anyone on your Wi-Fi can access files
-- **Do not expose** to public networks or the internet
-- Use only on **trusted networks**
-- Consider adding authentication for multi-user environments
+- No authentication by default
+- Do **not** expose directly to the internet
+- Use only on trusted networks
