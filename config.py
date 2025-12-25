@@ -1,20 +1,19 @@
 """
-Configuration settings for the Flask Home Server
+Application configuration for FlashVault
 """
 import os
 
 # Server configuration
-HOST = '0.0.0.0'
+HOST = "0.0.0.0"
 PORT = 8000
 
-# Directory configuration
-SHARED_DIR = os.path.join(os.path.expanduser("~"), "FileShare")
-TEMP_DIR = os.path.join(os.path.expanduser("~"), ".tmp")
+# Storage configuration
+SHARED_DIR = os.path.join(os.path.expanduser("~"), "FlashVault")
 
-# Upload configuration
-ALLOWED_EXTENSIONS = None  # None = allow all types
-MAX_CONTENT_LENGTH = 40 * 1024 * 1024 * 1024  # Upload limit per request
-STORAGE_QUOTA = 100 * 1024 * 1024 * 1024  # total storage limit
+# Upload limits
+ALLOWED_EXTENSIONS = None                      # None = allow all types
+MAX_CONTENT_LENGTH = 40 * 1024 * 1024 * 1024   # 40 GB max upload size
+STORAGE_QUOTA = 100 * 1024 * 1024 * 1024       # 100 GB total storage limit
 
 # Security
 SECRET_KEY = 'bW2jjbb@#b'
