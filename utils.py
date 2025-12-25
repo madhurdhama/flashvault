@@ -1,23 +1,27 @@
 """
-Utility functions for the Flask Home Server
+Utility helpers for FlashVault
 """
+
 import os
 import pathlib
 import datetime
 from config import SHARED_DIR, STORAGE_QUOTA
 
-def human_size(n):
+def human_size(size):
+    """Convert bytes to human-readable format."""
     for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-        if n < 1024:
-            return f"{n:.1f} {unit}"
-        n /= 1024
-    return f"{n:.1f} PB"
+        if size < 1024:
+            return f"{size:.1f} {unit}"
+        size /= 1024
+    return f"{size:.1f} PB"
 
 def get_safe_path(subpath=''):
-    requested = os.path.normpath(os.path.join(SHARED_DIR, subpath))
-    return requested if requested.startswith(SHARED_DIR) else SHARED_DIR
+    """Return a safe absolute path inside the shared directory."""
+    path = os.path.normpath(os.path.join(SHARED_DIR, subpath))
+    return path if path.startswith(SHARED_DIR) else SHARED_DIR
 
 def list_files(current_path):
+    """Return sorted list of files and folders in a directory."""
     items = []
     for entry in sorted(pathlib.Path(current_path).iterdir(), key=lambda x: (x.is_file(), x.name.lower())):
         stat = entry.stat()
@@ -31,16 +35,23 @@ def list_files(current_path):
     return items
 
 def get_breadcrumbs(current_path):
+    """Build breadcrumb navigation paths."""
     rel_path = os.path.relpath(current_path, SHARED_DIR)
     if rel_path == '.':
         return []
     breadcrumbs = []
-    cumulative = ''
+    current = ''
     for part in rel_path.split(os.sep):
-        cumulative = os.path.join(cumulative, part) if cumulative else part
-        breadcrumbs.append({'name': part, 'path': cumulative})
+        current = os.path.join(current, part) if current else part
+        breadcrumbs.append({'name': part, 'path': current})
+
     return breadcrumbs
 
 def get_free_space():
-    used = sum(f.stat().st_size for f in pathlib.Path(SHARED_DIR).rglob('*') if f.is_file())
+    """Return remaining storage space in bytes."""
+    used = sum(
+        f.stat().st_size
+        for f in pathlib.Path(SHARED_DIR).rglob('*')
+        if f.is_file()
+    )
     return max(STORAGE_QUOTA - used, 0)
