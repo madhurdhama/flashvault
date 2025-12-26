@@ -52,8 +52,6 @@ http://<your-ip>:8000
 ## 📁 Directory Structure
 
 ```
-~/FileShare/          # All shared files (auto-created)
-~/.tmp/               # Temporary upload storage
 flashvault/
 ├── app.py            # Main Flask application
 ├── config.py         # Configuration settings
@@ -65,6 +63,8 @@ flashvault/
 │       └── app.js
 └── templates/
     └── index.html
+
+~/FlashVault/          # All shared files (auto-created)
 ```
 
 ---
