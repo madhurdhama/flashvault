@@ -20,29 +20,25 @@ Perfect for quickly transferring files between your PC, phone, or other devices 
 
 ---
 
-## 🛠️ Setup
+## 🛠️ Installation
 
-### 1. Clone the repository
+**Prerequisites:** Python 3.8 or newer
+
 ```bash
 git clone https://github.com/madhurdhama/flashvault.git
-```
-
-### 2. Install dependencies
-```bash
+cd flashvault
 pip install flask
-```
-
-### 3. Run the server
-```bash
-python3 app.py
 ```
 
 ---
 
-## 🌐 Access the Server
+## 🌐 Running the server
+
+```bash
+python3 app.py
+```
 
 Find your local IP address and open it in your browser:
-
 ```
 http://<your-ip>:8000
 ```
@@ -64,7 +60,7 @@ flashvault/
 └── templates/
     └── index.html
 
-~/FlashVault/          # All shared files (auto-created)
+~/FlashVault/          # Shared files directory
 ```
 
 ---
