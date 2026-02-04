@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%230066ff' d='M13 2L3 14h8l-1 8 10-12h-8l1-8z'/></svg>">
     <title>FlashVault</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
@@ -11,8 +13,14 @@
 <body>
     <!-- Header -->
     <header>
-        <h1>FlashVault</h1>
-        <div class="stats">{{ storage_left }} • {{ count }} items</div>
+        <div class="header-wrapper">
+            <h1>
+                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"
+                    style="vertical-align: -4px; margin-right: 8px; color: #0066ff;">
+                    <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z" />
+                </svg>FlashVault
+            </h1>
+            <div class="stats">{{ storage_left }} • {{ count }} items</div>
     </header>
 
     <!-- Upload Section -->
