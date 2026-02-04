@@ -1,7 +1,6 @@
 """
 FlashVault - Main Application
 """
-
 import sys
 import os
 import logging
@@ -11,7 +10,6 @@ from werkzeug.utils import secure_filename
 
 sys.dont_write_bytecode = True # Prevent creation of __pycache__
 
-# Load configuration and helpers
 from config import SHARED_DIR, HOST, PORT, MAX_CONTENT_LENGTH, SECRET_KEY
 from utils import human_size, get_safe_path, list_files, get_breadcrumbs, get_free_space
 
@@ -65,9 +63,9 @@ def delete(filepath):
         os.remove(full_path)
         logger.info(f"Deleted: {filepath}")
         return jsonify({'success': True})
-    except Exception as e:
-        logger.exception(f"Delete error: {filepath}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+    except Exception:
+        logger.exception("Delete error")
+        return jsonify({'success': False, 'error': 'Delete failed'}), 500
 
 @app.route('/storage-check', methods=['POST'])
 def storage_check():
@@ -75,34 +73,62 @@ def storage_check():
         size = request.get_json().get('size', 0)
         free = get_free_space()
         return jsonify({'available': free > size, 'free': free})
-    except Exception as e:
-        return jsonify({'available': False, 'free': 0, 'error': str(e)}), 400
+    except Exception:
+        return jsonify({'available': False, 'free': 0, 'error': 'Invalid request'}), 400
 
 @app.route('/upload', methods=['POST'])
 def upload():
+    temp_path = None
     try:
+        # Check storage quota
         content_length = request.content_length or 0
         if content_length > 0 and get_free_space() < content_length:
             logger.warning("Upload rejected - storage quota exceeded")
             return jsonify({'error': 'Storage quota exceeded'}), 507
 
         upload_dir = get_safe_path(request.headers.get('X-Upload-Path', ''))
-        filename = secure_filename(request.headers.get('X-Filename'))
 
+        # Validate filename
+        raw_name = request.headers.get('X-Filename')
+        if not raw_name:
+            return jsonify({'error': 'Filename header missing'}), 400
+
+        filename = secure_filename(raw_name)
         if not filename:
-            return jsonify({'error': 'Missing filename'}), 400
+            return jsonify({'error': 'Invalid filename'}), 400
 
         filepath = os.path.join(upload_dir, filename)
+        
+        # Prevent overwriting existing files
+        if os.path.exists(filepath):
+            return jsonify({'error': 'File already exists'}), 409
 
-        with open(filepath, 'wb') as f:
-            while chunk := request.stream.read(1024 * 1024):
+        # Write to .part file first (atomic upload)
+        temp_path = filepath + ".part"
+        with open(temp_path, 'wb') as f:
+            while True:
+                chunk = request.stream.read(1024 * 1024)
+                if not chunk:
+                    break
                 f.write(chunk)
-        logger.info(f"Uploaded: {filename}")
+
+        # Atomically move to final location
+        os.replace(temp_path, filepath)
+        temp_path = None
+        
+        logger.info(f"✓ {filename}")
         return jsonify({'success': True})
 
-    except Exception as e:
-        logger.exception("Upload error")
-        return jsonify({'error': str(e)}), 500
+    except Exception:
+        logger.exception("Upload failed")
+        return jsonify({'error': 'Upload failed'}), 500
+    finally:
+        # Cleanup .part file on failure
+        if temp_path and os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except Exception:
+                pass
 
 if __name__ == '__main__':
     logger.info(f"Serving files from: {SHARED_DIR}")

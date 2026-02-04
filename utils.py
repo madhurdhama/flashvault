@@ -1,7 +1,6 @@
 """
 Utility helpers for FlashVault
 """
-
 import os
 import pathlib
 import datetime
@@ -17,8 +16,13 @@ def human_size(size):
 
 def get_safe_path(subpath=''):
     """Return a safe absolute path inside the shared directory."""
-    path = os.path.normpath(os.path.join(SHARED_DIR, subpath))
-    return path if path.startswith(SHARED_DIR) else SHARED_DIR
+    base = pathlib.Path(SHARED_DIR).resolve()
+    target = (base / subpath).resolve()
+    try:
+        target.relative_to(base)
+        return str(target)
+    except ValueError:
+        return str(base)
 
 def list_files(current_path):
     """Return sorted list of files and folders in a directory."""
@@ -44,7 +48,6 @@ def get_breadcrumbs(current_path):
     for part in rel_path.split(os.sep):
         current = os.path.join(current, part) if current else part
         breadcrumbs.append({'name': part, 'path': current})
-
     return breadcrumbs
 
 def get_free_space():
