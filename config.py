@@ -1,6 +1,7 @@
 """
 Application configuration for FlashVault
 """
+
 import os
 
 # Server configuration
@@ -11,9 +12,8 @@ PORT = 8000
 SHARED_DIR = os.path.join(os.path.expanduser("~"), "FlashVault")
 
 # Upload limits
-ALLOWED_EXTENSIONS = None                      # None = allow all types
 MAX_CONTENT_LENGTH = 40 * 1024 * 1024 * 1024   # 40 GB max upload size
 STORAGE_QUOTA = 100 * 1024 * 1024 * 1024       # 100 GB total storage limit
 
 # Security
-SECRET_KEY = 'bW2jjbb@#b'
+SECRET_KEY = os.environ.get("SECRET_KEY", os.urandom(32))
