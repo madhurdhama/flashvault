@@ -20,6 +20,12 @@ Perfect for quickly transferring files between your PC, phone, or other devices 
 
 ---
 
+## 🖼️ Preview
+
+![UI](preview/screenshot1.png)
+
+---
+
 ## 🛠️ Installation
 
 **Prerequisites:** Python 3.8 or newer
@@ -57,20 +63,21 @@ flashvault/
 │   │   └── style.css
 │   └── js/
 │       └── app.js
-└── templates/
-    └── index.html
+├── templates/
+│   └── index.html
+└── preview           # UI preview images
 
-~/FlashVault/          # Shared files directory
+~/FlashVault/         # Shared files directory
 ```
 
 ---
 
 ## 🧰 Tech Stack
 
-- Python 3 (Flask)
-- HTML, CSS, JavaScript
-- Local filesystem storage
-- HTTP-based file transfer
+- Backend: Python 3 + Flask
+- Frontend: HTML5, CSS3, Vanilla JavaScript
+- Storage: Local Filesystem
+- Protocol: HTTP (LAN)
 
 ---
 
