@@ -306,3 +306,30 @@ svg {
   border-color: var(--fg);
   font-weight: 500;
 }
+
+/* ==================== Drag and Drop ==================== */
+body.drag-over {
+  background-color: #e3f2fd;
+  outline: 3px dashed var(--primary);
+  outline-offset: -10px;
+}
+
+@media (prefers-color-scheme: dark) {
+  body.drag-over {
+    background-color: #0d2137;
+  }
+}
+
+body.drag-over::before {
+  content: 'Drop files to upload';
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  color: var(--primary);
+  font-weight: 600;
+  pointer-events: none;
+  z-index: 9999;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}

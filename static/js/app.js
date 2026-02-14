@@ -5,11 +5,34 @@ const bar = document.getElementById('progressBar');
 const pctLabel = document.getElementById('progressPercent');
 const nameLabel = document.getElementById('progressLabel');
 const timeLabel = document.getElementById('progressTime');
+const dropZone = document.body;
 
 let startTime = 0;
 
 fileInput.onchange = () => fileInput.files.length && uploadFiles();
 form.onsubmit = (e) => e.preventDefault();
+
+// Drag and drop handlers
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('drag-over');
+});
+
+dropZone.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+});
+
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        fileInput.files = files;
+        uploadFiles();
+    }
+});
 
 async function uploadFiles() {
     const files = [...fileInput.files];
