@@ -12,8 +12,8 @@ PORT = 8000
 SHARED_DIR = os.path.join(os.path.expanduser("~"), "FlashVault")
 
 # Upload limits
-MAX_CONTENT_LENGTH = 40 * 1024 * 1024 * 1024   # 40 GB max upload size
-STORAGE_QUOTA = 100 * 1024 * 1024 * 1024       # 100 GB total storage limit
+MAX_CONTENT_LENGTH = 50 * 1024 * 1024 * 1024   # 50 GB max per file
+MIN_FREE_SPACE = 20 * 1024 * 1024 * 1024       # Keep 20 GB free (buffer)
 
 # Security
 SECRET_KEY = os.environ.get("SECRET_KEY", os.urandom(32))

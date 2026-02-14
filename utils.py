@@ -5,47 +5,19 @@ Utility helpers for FlashVault
 import os
 import pathlib
 import datetime
-import threading
-from config import SHARED_DIR, STORAGE_QUOTA
-
-
-# Storage accounting
-# Tracks total bytes currently stored inside SHARED_DIR.
-# Initialized once at startup and updated on upload/delete.
-_USED_SPACE = 0
-_LOCK = threading.Lock()
-
-
-def init_storage():
-    """Scan disk once at startup to initialize used space."""
-    global _USED_SPACE
-    _USED_SPACE = sum(
-        f.stat().st_size
-        for f in pathlib.Path(SHARED_DIR).rglob('*')
-        if f.is_file()
-    )
-
-
-def add_used_space(size: int):
-    """Increase used space counter (thread-safe)."""
-    global _USED_SPACE
-    with _LOCK:
-        _USED_SPACE += size
-
-
-def remove_used_space(size: int):
-    """Decrease used space counter (never below zero)."""
-    global _USED_SPACE
-    with _LOCK:
-        _USED_SPACE = max(_USED_SPACE - size, 0)
+import shutil
+from config import SHARED_DIR, MIN_FREE_SPACE
 
 
 def get_free_space() -> int:
-    """Return remaining free space in bytes (O(1))."""
-    return max(STORAGE_QUOTA - _USED_SPACE, 0)
+    """Return available disk space (minus MIN_FREE_SPACE buffer)."""
+    try:
+        stat = shutil.disk_usage(SHARED_DIR)
+        return max(stat.free - MIN_FREE_SPACE, 0)
+    except Exception:
+        return 0
 
 
-# Helpers
 def human_size(size: int) -> str:
     """Convert bytes to human-readable form."""
     for unit in ('B', 'KB', 'MB', 'GB', 'TB'):
@@ -56,7 +28,7 @@ def human_size(size: int) -> str:
 
 
 def get_safe_path(subpath: str = '') -> str:
-    """Resolve and restrict paths to SHARED_DIR (path traversal safe)."""
+    """Resolve and restrict paths to SHARED_DIR (prevents path traversal)."""
     base = pathlib.Path(SHARED_DIR).resolve()
     target = (base / subpath).resolve()
     try:
@@ -67,22 +39,25 @@ def get_safe_path(subpath: str = '') -> str:
 
 
 def list_files(current_path: str) -> list[dict]:
-    """Return sorted list of files/folders in a directory."""
+    """Return sorted list of files/folders (folders first, then alphabetical)."""
     items = []
-    for entry in sorted(
-        pathlib.Path(current_path).iterdir(),
-        key=lambda x: (x.is_file(), x.name.lower())
-    ):
-        stat = entry.stat()
-        items.append({
-            'name': entry.name,
-            'path': os.path.relpath(entry, SHARED_DIR),
-            'is_file': entry.is_file(),
-            'size': human_size(stat.st_size) if entry.is_file() else '',
-            'mtime': datetime.datetime.fromtimestamp(
-                stat.st_mtime
-            ).strftime('%Y-%m-%d %H:%M:%S')
-        })
+    try:
+        for entry in sorted(
+            pathlib.Path(current_path).iterdir(),
+            key=lambda x: (x.is_file(), x.name.lower())
+        ):
+            stat = entry.stat()
+            items.append({
+                'name': entry.name,
+                'path': os.path.relpath(entry, SHARED_DIR),
+                'is_file': entry.is_file(),
+                'size': human_size(stat.st_size) if entry.is_file() else '',
+                'mtime': datetime.datetime.fromtimestamp(
+                    stat.st_mtime
+                ).strftime('%Y-%m-%d %H:%M:%S')
+            })
+    except (PermissionError, FileNotFoundError):
+        pass
     return items
 
 

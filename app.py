@@ -1,21 +1,5 @@
 """
 FlashVault - Main Application
-
-DEPLOYMENT NOTE:
-Single-process deployment only.
-
-Safe:
-- python3 app.py
-- gunicorn -w 1 -k gthread ...
-
-Not safe:
-- gunicorn -w > 1
-
-Reason:
-Storage quota tracking uses an in-memory counter that is not shared
-across processes. Multi-worker deployments will break quota enforcement.
-
-For multi-process deployments, a shared backend (Redis/database) is required.
 """
 
 import sys
@@ -33,10 +17,7 @@ from utils import (
     get_safe_path,
     list_files,
     get_breadcrumbs,
-    get_free_space,
-    init_storage,
-    add_used_space,
-    remove_used_space
+    get_free_space
 )
 
 
@@ -45,7 +26,6 @@ logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 
 os.makedirs(SHARED_DIR, exist_ok=True)
-init_storage()
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
@@ -58,6 +38,7 @@ werkzeug.serving.WSGIRequestHandler.protocol_version = "HTTP/1.1"
 @app.route('/browse/')
 @app.route('/browse/<path:subpath>')
 def browse(subpath=''):
+    """Browse files with pagination and breadcrumb navigation."""
     current_path = get_safe_path(subpath)
     files = list_files(current_path)
 
@@ -79,6 +60,7 @@ def browse(subpath=''):
 
 @app.route('/download/<path:filepath>')
 def download(filepath):
+    """Download a file."""
     full_path = get_safe_path(filepath)
 
     if not os.path.isfile(full_path):
@@ -93,16 +75,14 @@ def download(filepath):
 
 @app.route('/delete/<path:filepath>', methods=['POST'])
 def delete(filepath):
+    """Delete a file."""
     try:
         full_path = get_safe_path(filepath)
 
         if not os.path.isfile(full_path):
             return jsonify({'success': False, 'error': 'Not a file'}), 400
 
-        size = os.path.getsize(full_path)
         os.remove(full_path)
-        remove_used_space(size)
-
         logger.info(f"Deleted: {filepath}")
         return jsonify({'success': True})
 
@@ -113,41 +93,37 @@ def delete(filepath):
 
 @app.route('/storage-check', methods=['POST'])
 def storage_check():
+    """Pre-upload storage validation."""
     try:
         data = request.get_json(silent=True) or {}
         size = int(data.get('size', 0))
         free = get_free_space()
         return jsonify({'available': free > size, 'free': free})
-    
     except Exception:
-        return jsonify({'available': False, 'free': 0, 'error': 'Invalid request'}), 400
+        return jsonify({'available': False, 'free': 0}), 400
 
 
 @app.route('/upload', methods=['POST'])
 def upload():
+    """Upload a file. Stream to .part file, check space, then atomically rename."""
     temp_path = None
+    
     try:
-        # Fast quota check (early reject)
-        content_length = request.content_length or 0
-        if content_length > 0 and get_free_space() < content_length:
-            return jsonify({'error': 'Storage quota exceeded'}), 507
-
+        # Validate and prepare
         upload_dir = get_safe_path(request.headers.get('X-Upload-Path', ''))
         os.makedirs(upload_dir, exist_ok=True)
 
         raw_name = request.headers.get('X-Filename')
         if not raw_name:
             return jsonify({'error': 'Filename header missing'}), 400
-
         filename = secure_filename(raw_name)
         if not filename:
             return jsonify({'error': 'Invalid filename'}), 400
-
         filepath = os.path.join(upload_dir, filename)
         if os.path.exists(filepath):
             return jsonify({'error': 'File already exists'}), 409
 
-        # Stream upload to temp file
+        # Stream to temp file
         temp_path = filepath + '.part'
         with open(temp_path, 'wb') as f:
             while True:
@@ -156,26 +132,27 @@ def upload():
                     break
                 f.write(chunk)
 
+        # Check space and commit
         written_size = os.path.getsize(temp_path)
-
-        # Final quota check (race-safe)
         if get_free_space() < written_size:
             os.remove(temp_path)
-            return jsonify({'error': 'Storage quota exceeded'}), 507
-
-        os.replace(temp_path, filepath)  # atomic
+            return jsonify({'error': 'Insufficient disk space'}), 507
+        
+        os.replace(temp_path, filepath)
         temp_path = None
-        add_used_space(written_size)
-
         logger.info(f"✓ {filename}")
         return jsonify({'success': True})
-
+    
+    except OSError as e:
+        # Disk full during write
+        logger.error(f"Storage error: {e}")
+        return jsonify({'error': 'Insufficient disk space'}), 507
     except Exception:
         logger.exception("Upload failed")
         return jsonify({'error': 'Upload failed'}), 500
 
     finally:
-        # Cleanup .part file on failure
+        # Cleanup temp file on failure
         if temp_path and os.path.exists(temp_path):
             try:
                 os.remove(temp_path)
