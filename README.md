@@ -1,39 +1,33 @@
-# ⚡ FlashVault
+# FlashVault
 
-**Fast. Local. Simple.**
+![Python](https://img.shields.io/badge/python-3.9%2B-4584b6?style=for-the-badge&logo=python)
+![Flask](https://img.shields.io/badge/flask-black?style=for-the-badge&logo=flask&logoColor=white)
 
-FlashVault is a lightweight, high-speed local file server built with Flask for fast and simple file sharing over your local network.
+A lightweight local file server built with Flask. Browse, upload, download, and manage files from any browser on your network — no internet required.
 
-Browse, upload, download, and manage files from any browser — no internet required.
-
-Perfect for quickly transferring files between your PC, phone, or other devices on the same Wi-Fi.
-
----
-
-## 🚀 Features
-
-- ⚡ High-speed local file transfers (LAN optimized)
-- 📁 Browse folders and files from any browser
-- ⬆️ Upload large files with real-time progress tracking
-- 🎯 Drag and drop file upload support
-- ⬇️ Download files instantly
-- 🗑️ Delete files with confirmation
-- 💾 Smart disk space management with buffer
-- 🌓 Light/dark theme support (auto-detects)
-- 🧭 Clean and responsive web interface
-- 🧩 Minimal dependencies, easy to run
+Useful for moving files between your PC, phone, or any other device on the same Wi-Fi.
 
 ---
 
-## 🖼️ Preview
+## Features
+
+- **Browse and manage files** — folders, rename, delete, all through modal dialogs instead of browser popups
+- **Preview without downloading** — images, video, audio, PDFs, and text/code files open inline
+- **Drag-and-drop upload** with a live progress bar, time remaining, and a cancel button
+- **Storage-aware uploads** — checks free disk space and file size limits before and during upload, with clear error messages if either is exceeded
+- **Light/dark theme** — follows your system setting automatically
+
+---
+
+## Preview
 
 ![UI](preview/screenshot1.png)
 
 ---
 
-## 🛠️ Installation
+## Installation
 
-**Prerequisites:** Python 3.8 or newer
+Requires Python 3.9+.
 
 ```bash
 git clone https://github.com/madhurdhama/flashvault.git
@@ -43,71 +37,35 @@ pip install flask
 
 ---
 
-## 🌐 Running & Accessing
+## Running
 
-### Start the server
 ```bash
 python3 app.py
 ```
 
-### Access from any device
-1. Find your server's IP address:
-   - **Linux/Mac:** `hostname -i`
-   - **Windows:** `ipconfig` (IPv4 Address)
+The terminal prints the address to open:
 
-2. Open browser on any device:
 ```
-http://<your-ip>:8000
+Network: http://192.168.x.x:8000
 ```
+
+Open that address on any device connected to the same Wi-Fi, or use `http://localhost:8000` on the same machine.
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
-Edit `config.py` to customize:
+All settings live in `config.py`:
 
 ```python
-HOST = "0.0.0.0"                     # Listen on all interfaces
-PORT = 8000                          # Server port
-MAX_CONTENT_LENGTH = 50 GB           # Max file size per upload
-MIN_FREE_SPACE = 20 GB               # Disk space buffer
+HOST = "0.0.0.0"                               # listen on all interfaces
+PORT = 8000
+MAX_CONTENT_LENGTH = 50 * 1024 * 1024 * 1024   # 50 GB max per file
+MIN_FREE_SPACE = 20 * 1024 * 1024 * 1024       # keep 20 GB free, upload blocked below this
 ```
 
 ---
 
-## 📁 Directory Structure
+## Security
 
-```
-flashvault/
-├── app.py            # Main Flask application
-├── config.py         # Configuration settings
-├── utils.py          # Helper functions
-├── static/
-│   ├── css/
-│   │   └── style.css
-│   └── js/
-│       └── app.js
-├── templates/
-│   └── index.html
-└── preview           # UI preview images
-
-~/FlashVault/         # Shared files directory (auto-created)
-```
-
----
-
-## 🧰 Tech Stack
-
-- **Backend:** Python 3 + Flask
-- **Frontend:** HTML5, CSS3, Vanilla JavaScript
-- **Storage:** Local Filesystem (shutil-based)
-- **Protocol:** HTTP (LAN)
-
----
-
-## ⚠️ Security Notice
-
-- Designed for **local network use only**
-- No authentication by default
-- Do **not** expose directly to the internet
-- Use only on trusted networks
+Built for trusted local networks only — there's no authentication on any route. Do not expose this directly to the internet. If you need remote access, put it behind a VPN (e.g. Tailscale) rather than port-forwarding.
