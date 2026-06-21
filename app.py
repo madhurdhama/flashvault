@@ -5,7 +5,9 @@ import os
 import shutil
 import logging
 import werkzeug
-from flask import Flask, render_template, send_from_directory, request, jsonify
+import socket
+from zipstream import ZipStream
+from flask import Flask, render_template, send_from_directory, request, jsonify, Response, stream_with_context
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge, ClientDisconnected
 
@@ -79,6 +81,74 @@ def download(filepath):
         os.path.basename(full_path),
         as_attachment=True
     )
+
+
+@app.route('/download-folder/<path:folderpath>')
+def download_folder(folderpath):
+    full_path = get_safe_path(folderpath)
+
+    if not os.path.isdir(full_path):
+        return jsonify({'error': 'Folder not found'}), 404
+
+    folder_name = os.path.basename(full_path)
+    safe_folder_name = folder_name.replace('"', '_')
+
+    try:
+        zs = ZipStream.from_path(full_path, sized=True)
+        logger.info(f"ZIP stream: {folderpath} ({len(zs)} bytes)")
+        return Response(
+            stream_with_context(zs),
+            mimetype='application/zip',
+            headers={
+                'Content-Disposition': f'attachment; filename="{safe_folder_name}.zip"',
+                'Content-Length': str(len(zs)),
+                'Last-Modified': zs.last_modified.strftime('%a, %d %b %Y %H:%M:%S GMT'),
+                'X-Accel-Buffering': 'no',
+            }
+        )
+    except Exception as e:
+        logger.error(f"ZIP stream error: {e}")
+        return jsonify({'error': 'Failed to create ZIP'}), 500
+
+
+@app.route('/download-multi', methods=['GET'])
+def download_multi():
+    # paths passed as repeated query param: ?path=foo&path=bar
+    paths = request.args.getlist('path')
+
+    if not paths:
+        return jsonify({'error': 'No paths provided'}), 400
+
+    resolved = []
+    for p in paths:
+        full = get_safe_path(p)
+        if os.path.exists(full):
+            resolved.append(full)
+
+    if not resolved:
+        return jsonify({'error': 'No valid paths'}), 400
+
+    try:
+        zs = ZipStream(sized=True)
+        for full in resolved:
+            if os.path.isdir(full):
+                zs.add_path(full, os.path.basename(full))
+            else:
+                zs.add_path(full)
+
+        logger.info(f"ZIP multi-stream: {len(resolved)} items ({len(zs)} bytes)")
+        return Response(
+            stream_with_context(zs),
+            mimetype='application/zip',
+            headers={
+                'Content-Disposition': 'attachment; filename="flashvault-selection.zip"',
+                'Content-Length': str(len(zs)),
+                'X-Accel-Buffering': 'no',
+            }
+        )
+    except Exception as e:
+        logger.error(f"ZIP multi-stream error: {e}")
+        return jsonify({'error': 'Failed to create ZIP'}), 500
 
 
 @app.route('/preview/<path:filepath>')
@@ -282,7 +352,6 @@ def request_too_large(e):
 
 
 if __name__ == '__main__':
-    import socket
     try:
         # no packet actually goes out, this just asks the OS which
         # network interface it would use

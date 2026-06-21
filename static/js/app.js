@@ -17,6 +17,10 @@ let renameTarget   = null;
 let _deleteTarget  = null;
 let _currentXhr    = null;
 
+// --- Selection state ---
+let selectedPaths  = new Set(); // dataset.path values of selected cards
+let _longPressTimer = null;
+
 // upload
 fileInput.onchange = () => fileInput.files.length && uploadFiles();
 form.onsubmit = (e) => e.preventDefault();
@@ -172,13 +176,111 @@ function lockNav(lock) {
     });
 }
 
+// ==================== Selection ====================
+
+function toggleSelect(e, card) {
+    e.stopPropagation();
+    const path = card.dataset.path;
+    if (selectedPaths.has(path)) {
+        selectedPaths.delete(path);
+        card.classList.remove('selected');
+    } else {
+        selectedPaths.add(path);
+        card.classList.add('selected');
+    }
+    updateSelectionBar();
+}
+
+function updateSelectionBar() {
+    const count = selectedPaths.size;
+    const bar   = document.getElementById('selectionBar');
+
+    document.getElementById('selCount').textContent = count + ' selected';
+
+    if (count > 0) {
+        document.body.classList.add('selecting');
+        bar.classList.add('visible');
+    } else {
+        document.body.classList.remove('selecting');
+        bar.classList.remove('visible');
+    }
+}
+
+function clearSelection() {
+    selectedPaths.clear();
+    document.querySelectorAll('.card.selected').forEach(c => c.classList.remove('selected'));
+    document.body.classList.remove('selecting');
+    document.getElementById('selectionBar').classList.remove('visible');
+}
+
+function selectAll() {
+    document.querySelectorAll('.card').forEach(card => {
+        selectedPaths.add(card.dataset.path);
+        card.classList.add('selected');
+    });
+    updateSelectionBar();
+}
+
+async function downloadSelection() {
+    if (!selectedPaths.size) return;
+
+    // build GET URL with repeated ?path= params — browser handles it as a
+    // native streaming download, same as /download-folder, no blob buffering
+    const params = new URLSearchParams();
+    for (const p of selectedPaths) params.append('path', p);
+    showToast('Preparing ZIP…', 'info');
+    triggerDownload('/download-multi?' + params.toString());
+}
+
+function deleteSelection() {
+    if (!selectedPaths.size) return;
+    const count = selectedPaths.size;
+    const paths = [...selectedPaths];
+    _deleteTarget = { paths, bulk: true };
+    document.getElementById('deleteModalTitle').textContent = `Delete ${count} item${count !== 1 ? 's' : ''}`;
+    document.getElementById('deleteModalBody').innerHTML =
+        `<strong>${count} item${count !== 1 ? 's' : ''}</strong> will be permanently deleted, including any folders and their contents.`;
+    document.getElementById('deleteOverlay').classList.add('open');
+}
+
+// ==================== Long-press for mobile selection ====================
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('pointerdown', (e) => {
+            // long-press only on touch — mouse users use the checkbox
+            if (e.pointerType !== 'touch') return;
+            _longPressTimer = setTimeout(() => {
+                _longPressTimer = null;
+                if (navigator.vibrate) navigator.vibrate(40);
+                toggleSelect(e, card);
+            }, 500);
+        });
+
+        card.addEventListener('pointerup',    () => clearTimeout(_longPressTimer));
+        card.addEventListener('pointercancel',() => clearTimeout(_longPressTimer));
+        card.addEventListener('pointermove',  () => clearTimeout(_longPressTimer));
+    });
+});
+
+// ==================== Card navigation ====================
+
 // card navigation
 function handleFolderClick(e, path) {
     if (uploading) { showToast('Upload in progress — please wait.', 'warn'); return; }
+    // in selection mode, clicks select/deselect instead of navigating
+    if (document.body.classList.contains('selecting')) {
+        toggleSelect(e, e.currentTarget || e.target.closest('.card'));
+        return;
+    }
     location.href = '/browse/' + path;
 }
 
 function handleFileClick(e, card, path) {
+    if (document.body.classList.contains('selecting')) {
+        toggleSelect(e, card);
+        return;
+    }
     const name = card.dataset.name;
     openPreview(path, name);
 }
@@ -190,9 +292,10 @@ function openMenu(e, btn) {
     activeMenuCard = card;
     const isFile = card.dataset.isFile === 'true';
 
-    document.getElementById('menuOpen').style.display     = isFile ? 'none' : '';
-    document.getElementById('menuPreview').style.display  = isFile ? '' : 'none';
-    document.getElementById('menuDownload').style.display = isFile ? '' : 'none';
+    document.getElementById('menuOpen').style.display        = isFile ? 'none' : '';
+    document.getElementById('menuPreview').style.display     = isFile ? '' : 'none';
+    document.getElementById('menuDownload').style.display    = isFile ? '' : 'none';
+    document.getElementById('menuDownloadZip').style.display = isFile ? 'none' : '';
 
     const menu = document.getElementById('contextMenu');
     const rect = btn.getBoundingClientRect();
@@ -211,7 +314,7 @@ document.addEventListener('click', (e) => {
 });
 
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { closeMenu(); closeDialog(); closeInfo(); closeDeleteModal(); closePreview(); }
+    if (e.key === 'Escape') { closeMenu(); closeDialog(); closeInfo(); closeDeleteModal(); closePreview(); clearSelection(); }
 });
 
 function menuAction(action) {
@@ -221,12 +324,13 @@ function menuAction(action) {
     const isFile = activeMenuCard.dataset.isFile === 'true';
     closeMenu();
     switch (action) {
-        case 'open':      location.href = '/browse/' + path; break;
-        case 'preview':   openPreview(path, name); break;
-        case 'download':  triggerDownload('/download/' + encodeURIComponent(path)); break;
-        case 'rename':    showRenameDialog(path, name); break;
-        case 'info':      showInfo(path); break;
-        case 'delete':    showDeleteModal(path, name, isFile); break;
+        case 'open':         location.href = '/browse/' + path; break;
+        case 'preview':      openPreview(path, name); break;
+        case 'download':     triggerDownload('/download/' + encodeURIComponent(path)); break;
+        case 'download-zip': triggerDownload('/download-folder/' + encodeURIComponent(path)); break;
+        case 'rename':       showRenameDialog(path, name); break;
+        case 'info':         showInfo(path); break;
+        case 'delete':       showDeleteModal(path, name, isFile); break;
     }
 }
 
@@ -256,6 +360,22 @@ function closeDeleteModal() {
 
 function confirmDeleteModal() {
     if (!_deleteTarget) return;
+
+    if (_deleteTarget.bulk) {
+        const paths = _deleteTarget.paths;
+        closeDeleteModal();
+        clearSelection();
+        Promise.all(paths.map(p =>
+            fetch(`/delete/${encodeURIComponent(p)}`, { method: 'POST' }).then(r => r.json())
+        )).then(results => {
+            const failed = results.filter(r => !r.success).length;
+            if (failed) showToast(`${failed} item${failed !== 1 ? 's' : ''} could not be deleted`, 'error');
+            else showToast(`${paths.length} item${paths.length !== 1 ? 's' : ''} deleted`, 'warn');
+            setTimeout(() => { if (!uploading) location.reload(); }, 700);
+        }).catch(() => showToast('Delete failed', 'error'));
+        return;
+    }
+
     const { path, name, isFile } = _deleteTarget;
     closeDeleteModal();
     fetch(`/delete/${encodeURIComponent(path)}`, { method: 'POST' })
