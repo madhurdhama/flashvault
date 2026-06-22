@@ -1,7 +1,7 @@
 # FlashVault
 
-![Python](https://img.shields.io/badge/python-3.9%2B-4584b6?style=for-the-badge&logo=python)
-![Flask](https://img.shields.io/badge/flask-black?style=for-the-badge&logo=flask&logoColor=white)
+[![Python](https://img.shields.io/badge/python-3.9%2B-4584b6?style=for-the-badge&logo=python)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/flask-black?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
 
 A lightweight local file server built with Flask. Browse, upload, download, and manage files from any browser on your network — no internet required.
 
@@ -15,13 +15,9 @@ Useful for moving files between your PC, phone, or any other device on the same 
 - **Preview without downloading** — images, video, audio, PDFs, and text/code files open inline
 - **Drag-and-drop upload** with a live progress bar, time remaining, and a cancel button
 - **Storage-aware uploads** — checks free disk space and file size limits before and during upload, with clear error messages if either is exceeded
+- **Download folders as ZIP** — streams directly to the browser, no server-side temp files
+- **Multi-select** — checkbox on hover (desktop) or long-press (mobile) to select files and folders; bulk download as ZIP or bulk delete from a floating action bar
 - **Light/dark theme** — follows your system setting automatically
-
----
-
-## Preview
-
-![UI](preview/screenshot1.png)
 
 ---
 
@@ -32,7 +28,7 @@ Requires Python 3.9+.
 ```bash
 git clone https://github.com/madhurdhama/flashvault.git
 cd flashvault
-pip install flask
+pip install flask zipstream-ng
 ```
 
 ---
