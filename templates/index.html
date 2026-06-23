@@ -12,80 +12,90 @@
 <!-- Header -->
 <header>
     <div class="header-wrapper">
-        <h1>
-            <svg width="22" height="22" fill="none" stroke="#0066ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="vertical-align:-4px;margin-right:8px;">
-                <polygon points="13,2 3,14 11,14 10,22 21,10 13,10"/>
-            </svg>FlashVault
-        </h1>
-        <div class="storage-badge">
-            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                <line x1="22" y1="12" x2="2" y2="12"/>
-                <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
-                <line x1="6" y1="16" x2="6.01" y2="16"/>
-                <line x1="10" y1="16" x2="10.01" y2="16"/>
-            </svg>
-            {{ storage_left }} free
-        </div>
-    </div>
-</header>
-
-<!-- Toolbar -->
-<div class="upload">
-    <div class="toolbar">
-        <form id="uploadForm" enctype="multipart/form-data">
-            <input type="hidden" name="current_path" value="{{ current_subpath }}">
-            <label for="fileInput" id="uploadLabel">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                    <polyline points="16 16 12 12 8 16"/>
-                    <line x1="12" y1="12" x2="12" y2="21"/>
-                    <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+        <div class="header-left">
+            <h1>
+                <svg width="20" height="20" fill="none" stroke="#0066ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                    <polygon points="13,2 3,14 11,14 10,22 21,10 13,10"/>
                 </svg>
-                Upload
-            </label>
-            <input type="file" name="files" id="fileInput" multiple>
-        </form>
+                FlashVault
+            </h1>
+            <div class="storage-badge">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                    <line x1="22" y1="12" x2="2" y2="12"/>
+                    <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+                </svg>
+                {{ storage_left }} free
+            </div>
+        </div>
+        <div class="header-right">
+            <form id="uploadForm" enctype="multipart/form-data">
+                <input type="hidden" name="current_path" value="{{ current_subpath }}">
+                <input type="file" name="files" id="fileInput" multiple>
+            </form>
 
-        <button class="btn-secondary" onclick="showNewFolderDialog()">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-                <line x1="12" y1="11" x2="12" y2="17"/>
-                <line x1="9" y1="14" x2="15" y2="14"/>
-            </svg>
-            New Folder
-        </button>
-
+            <div class="add-menu-wrap" id="addMenuWrap">
+                <button class="add-btn" onclick="toggleAddMenu()" aria-label="New">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24">
+                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    New
+                </button>
+                <div class="add-menu" id="mobileAddMenu">
+                    <label class="add-menu-item" for="fileInput" onclick="closeAddMenu()">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                            <polyline points="16 16 12 12 8 16"/>
+                            <line x1="12" y1="12" x2="12" y2="21"/>
+                            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+                        </svg>
+                        Upload file
+                    </label>
+                    <button class="add-menu-item" onclick="closeAddMenu(); showNewFolderDialog()">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                            <line x1="12" y1="11" x2="12" y2="17"/>
+                            <line x1="9" y1="14" x2="15" y2="14"/>
+                        </svg>
+                        New Folder
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Upload progress -->
     <div id="progressContainer" class="progress">
-        <div class="progress-info">
-            <span id="progressLabel">...</span>
-            <div class="progress-right">
-                <span id="progressPercent">0%</span>
-                <button class="progress-cancel" onclick="cancelUpload()" title="Cancel upload">
-                    <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                </button>
+        <div class="progress-inner">
+            <div class="progress-info">
+                <span id="progressLabel">...</span>
+                <div class="progress-right">
+                    <span id="progressPercent">0%</span>
+                    <button class="progress-cancel" onclick="cancelUpload()" title="Cancel upload">
+                        <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
+            <div class="bar"><div id="progressBar"></div></div>
+            <small id="progressTime">--</small>
         </div>
-        <div class="bar"><div id="progressBar"></div></div>
-        <small id="progressTime">--</small>
     </div>
-</div>
+</header>
 
 <!-- Breadcrumb + item count -->
 <div class="path-row">
-    {% if breadcrumbs %}
     <nav class="path" id="breadcrumbNav">
+        {% if breadcrumbs %}
         <a href="/" class="breadcrumb-link">Home</a>
         {% for crumb in breadcrumbs %}
         <span>/</span>
         <a href="/browse/{{ crumb.path }}" class="breadcrumb-link">{{ crumb.name }}</a>
         {% endfor %}
+        {% else %}
+        <span class="breadcrumb-current">Home</span>
+        {% endif %}
     </nav>
-    {% endif %}
     <div class="item-count">
         {%- if n_folders > 0 and n_files > 0 -%}
             {{ n_folders }} folder{{ 's' if n_folders != 1 }}, {{ n_files }} file{{ 's' if n_files != 1 }}

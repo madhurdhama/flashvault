@@ -6,7 +6,6 @@ const bar         = document.getElementById('progressBar');
 const pctLabel    = document.getElementById('progressPercent');
 const nameLabel   = document.getElementById('progressLabel');
 const timeLabel   = document.getElementById('progressTime');
-const uploadLabel = document.getElementById('uploadLabel');
 
 // --- State ---
 let startTime      = 0;
@@ -22,13 +21,13 @@ let selectedPaths  = new Set(); // dataset.path values of selected cards
 let _longPressTimer = null;
 
 // upload
-fileInput.onchange = () => fileInput.files.length && uploadFiles();
+fileInput.onchange = () => fileInput.files.length && uploadFiles(fileInput.files);
 form.onsubmit = (e) => e.preventDefault();
 
 window.addEventListener('scroll', () => {
     if (!uploading) return;
-    const uploadBottom = document.querySelector('.upload').getBoundingClientRect().bottom;
-    progress.classList.toggle('sticky', uploadBottom < 0);
+    const headerBottom = document.querySelector('header').getBoundingClientRect().bottom;
+    progress.classList.toggle('sticky', headerBottom < 0);
 }, { passive: true });
 
 window.addEventListener('beforeunload', (e) => {
@@ -36,22 +35,31 @@ window.addEventListener('beforeunload', (e) => {
 });
 
 const dropZone = document.body;
-dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+let _dragCount = 0;
+
+dropZone.addEventListener('dragenter', (e) => {
+    e.preventDefault();
+    _dragCount++;
+    dropZone.classList.add('drag-over');
+});
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); });
 dropZone.addEventListener('dragleave', (e) => {
-    if (e.relatedTarget === null) dropZone.classList.remove('drag-over');
+    _dragCount--;
+    if (_dragCount === 0) dropZone.classList.remove('drag-over');
 });
 dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
+    _dragCount = 0;
     dropZone.classList.remove('drag-over');
     if (uploading) return;
     const files = e.dataTransfer.files;
-    if (files.length > 0) { fileInput.files = files; uploadFiles(); }
+    if (files.length > 0) uploadFiles(files);
 });
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024 * 1024; // keep this number in sync with config.py
 
-async function uploadFiles() {
-    const files = [...fileInput.files];
+async function uploadFiles(fileList) {
+    const files = [...(fileList ?? fileInput.files)];
     const total = files.reduce((sum, f) => sum + f.size, 0);
 
     for (const file of files) {
@@ -78,7 +86,6 @@ async function uploadFiles() {
     uploading = true;
     progress.classList.add('show');
     fileInput.disabled = true;
-    uploadLabel.classList.add('disabled');
     lockNav(true);
 
     // one file at a time, not parallel — keeps the progress bar accurate
@@ -94,8 +101,8 @@ async function uploadFiles() {
 
     bar.style.width = pctLabel.textContent = '100%';
     nameLabel.textContent = 'Complete!';
-    uploading = false;
-    progress.classList.remove('sticky');
+    // re-enable UI immediately — don't wait for reload
+    resetUpload();
     setTimeout(() => location.reload(), 500);
 }
 
@@ -146,7 +153,6 @@ function resetUpload() {
     uploading = false;
     progress.classList.remove('show', 'sticky');
     fileInput.disabled = false;
-    uploadLabel.classList.remove('disabled');
     fileInput.value = '';
     bar.style.width = '0'; pctLabel.textContent = '0%';
     nameLabel.textContent = ''; timeLabel.textContent = '';
@@ -176,7 +182,21 @@ function lockNav(lock) {
     });
 }
 
-// ==================== Selection ====================
+// ==================== Add menu (+ button) ====================
+
+function toggleAddMenu() {
+    document.getElementById('mobileAddMenu').classList.toggle('open');
+}
+
+function closeAddMenu() {
+    document.getElementById('mobileAddMenu').classList.remove('open');
+}
+
+// close on outside click
+document.addEventListener('click', (e) => {
+    const add = document.getElementById('addMenuWrap');
+    if (add && !add.contains(e.target)) closeAddMenu();
+});
 
 function toggleSelect(e, card) {
     e.stopPropagation();
@@ -192,17 +212,17 @@ function toggleSelect(e, card) {
 }
 
 function updateSelectionBar() {
-    const count = selectedPaths.size;
-    const bar   = document.getElementById('selectionBar');
+    const count  = selectedPaths.size;
+    const selBar = document.getElementById('selectionBar');
 
     document.getElementById('selCount').textContent = count + ' selected';
 
     if (count > 0) {
         document.body.classList.add('selecting');
-        bar.classList.add('visible');
+        selBar.classList.add('visible');
     } else {
         document.body.classList.remove('selecting');
-        bar.classList.remove('visible');
+        selBar.classList.remove('visible');
     }
 }
 
@@ -268,9 +288,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // card navigation
 function handleFolderClick(e, path) {
     if (uploading) { showToast('Upload in progress — please wait.', 'warn'); return; }
-    // in selection mode, clicks select/deselect instead of navigating
     if (document.body.classList.contains('selecting')) {
-        toggleSelect(e, e.currentTarget || e.target.closest('.card'));
+        toggleSelect(e, e.target.closest('.card'));
         return;
     }
     location.href = '/browse/' + path;
